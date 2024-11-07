@@ -1,5 +1,6 @@
 import math
 import src.my_screen
+import statistics
 
 def generate_aabb(vertices):
 	# Find the two positions that will include all vertices
@@ -16,6 +17,9 @@ def generate_aabb(vertices):
 		max_y = max(max_y, vertex[1])
 
 	return [(min_x - 10, min_y - 10), (max_x + 10, max_y + 10)]
+
+def dist(vert_1, vert_2):
+	return math.sqrt(pow(vert_2[1] - vert_1[1], 2) + pow(vert_2[0] - vert_1[0],2))
 
 def create_aabb(vertices):
 	# Create 4 Line objects
@@ -34,22 +38,54 @@ def create_aabb(vertices):
 	objects.append(src.my_screen.get_line_object(top_r, top_l, "red"))
 	objects.append(src.my_screen.get_line_object(top_l, bottom_l, "red"))
 
-	return objects
+	longest_length = None
+	if (dist(bottom_l, bottom_r) > dist(top_l, top_r)):
+		longest_length = 'x'
+	else:
+		longest_length = 'y'
+
+	return longest_length, objects
 
 def generate_bvh(vertices):
 	# Create a tree of aabbs
 	# Create a node
 	root = BVH_Node(vertices)
-	root.aabb = create_aabb(vertices)
+	root.longest, root.aabb = create_aabb(vertices)
 	# Continue until leaves are 2 or less vertices
 	if len(vertices) <= 1:
 		# root.aabb = create_aabb(vertices)
 		return root
 
-	# Create children with half of the vertex count
-	index_half = math.floor(len(vertices) / 2)
-	root.l_child = generate_bvh(vertices[:index_half])
-	root.r_child = generate_bvh(vertices[index_half:])
+	# Find the median value of either x or y, don't use the index, iterate through the list and create a new list of
+	# X and another Y to calculate the median value use this as the middle index
+	x_list = []
+	y_list = []
+	for vertex in vertices:
+		x_list.append(vertex[0])
+		y_list.append(vertex[1])
+
+	# Sort the indices such the left half are together and the right half are together
+	center = None
+	if root.longest == 'x':
+		center = statistics.median(x_list)
+	else:
+		center = statistics.median(y_list)
+	# Move all vertices that have values less to left half more to right half
+	left_half = []
+	right_half = []
+	for vertex in vertices:
+		if root.longest == 'x':
+			if vertex[0] <= center:
+				left_half.append(vertex)
+			else:
+				right_half.append(vertex)
+		elif root.longest == 'y':
+			if vertex[1] <= center:
+				left_half.append(vertex)
+			else:
+				right_half.append(vertex)
+	root.l_child = generate_bvh(left_half)
+	root.r_child = generate_bvh(right_half)
 
 	return root
 
@@ -59,3 +95,4 @@ class BVH_Node:
 		self.aabb = []
 		self.l_child = None
 		self.r_child = None
+		self.longest = None
