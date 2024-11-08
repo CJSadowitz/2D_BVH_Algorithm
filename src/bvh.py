@@ -1,6 +1,7 @@
 import math
 import src.my_screen
 import statistics
+import pygame
 
 def generate_aabb(vertices):
 	# Find the two positions that will include all vertices
@@ -53,7 +54,8 @@ def generate_bvh(vertices):
 	root.longest, root.aabb = create_aabb(vertices)
 	# Continue until leaves are 2 or less vertices
 	if len(vertices) <= 1:
-		# root.aabb = create_aabb(vertices)
+		# This is a leaf
+		root.is_leaf = True
 		return root
 
 	# Find the median value of either x or y, don't use the index, iterate through the list and create a new list of
@@ -89,6 +91,32 @@ def generate_bvh(vertices):
 
 	return root
 
+def bvh_collision(root, obj_pos, surf):
+	# Determine if the object is within the aabb's of the tree. Only when its in a child node, check with vertex
+
+	# Check if object with current root aabb
+	y_min = math.inf
+	y_max = -math.inf
+	x_min = math.inf
+	x_max = -math.inf
+	for tuple in root.aabb:
+		x_min = min(x_min, tuple[2][0])
+		x_max = max(x_max, tuple[3][0])
+		y_min = min(y_min, tuple[2][1])
+		y_max = max(y_max, tuple[3][1])
+
+	if obj_pos[0] <= x_max and obj_pos[0] >= x_min and obj_pos[1] <= y_max and obj_pos[1] >= y_min:
+		# Inside the aabb; check if in the child node, draw this one
+		aabb_draw(root.aabb, surf)
+		if root.is_leaf:
+			return True
+		return bvh_collision(root.r_child, obj_pos, surf) or bvh_collision(root.l_child, obj_pos, surf)
+	return False
+
+def aabb_draw(aabb, surface):
+	for list in aabb:
+		pygame.draw.line(surface, "yellow", list[2], list[3])
+
 class BVH_Node:
 	def __init__(self, vertices):
 		self.vertices = vertices
@@ -96,3 +124,4 @@ class BVH_Node:
 		self.l_child = None
 		self.r_child = None
 		self.longest = None
+		self.is_leaf = False

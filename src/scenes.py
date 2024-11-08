@@ -8,16 +8,17 @@ def scene_one(tuple_screen, vertex_count):
 	objects = []
 	num_vertices = vertex_count
 	vertices = generate_rand_vertex_pos(tuple_screen, num_vertices)
-	all_aabbs = get_all_aabb(vertices)
-
-	for list in all_aabbs:
-		for object in list:
-			objects.append(object)
+	aabbs, root = get_all_aabb(vertices)
 
 	for vertex in vertices:
 		objects.append(src.my_screen.get_circle_object(vertex, (10), "blue"))
 
-	return objects
+	# Can draw aabbs here statically
+	# for list in aabbs:
+	#	for object in list:
+	#		objects.append(object)
+
+	return objects, root
 
 def traverse_bvh(root, aabb_list=[]):
 	if (root.l_child == None and root.r_child == None):
@@ -33,7 +34,7 @@ def get_all_aabb(vertices):
 	# Iterate through the tree until there is a list with every aabb
 	traverse_bvh(root, aabbs)
 
-	return aabbs
+	return aabbs, root
 
 def generate_rand_vertex_pos(tuple_screen, num_vertices):
 	vertices = []

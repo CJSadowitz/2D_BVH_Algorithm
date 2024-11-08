@@ -6,17 +6,17 @@ def main():
 	screen_size = (800, 600)
 	screen = src.my_screen.init(screen_size)
 	running = True
-	objects = src.scenes.scene_one(screen_size, 7)
+	objects, root = src.scenes.scene_one(screen_size, 7)
 
 	while running:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				running = False
 
-		screen.fill("Gray")
+		screen.fill("black")
 
 		mouse_pos = src.my_screen.update_mouse_pos()
-		src.my_screen.render(screen, objects, mouse_pos)
+		src.my_screen.render(screen, objects, root, mouse_pos)
 
 		pygame.display.flip()
 
